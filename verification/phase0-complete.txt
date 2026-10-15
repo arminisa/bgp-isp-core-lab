@@ -1,0 +1,103 @@
+============================================================
+BGP ISP Core Lab - Phase 0 Verification
+============================================================
+Author: Armin Isa
+Date: 2026-10-15
+Environment: GNS3 on Kali Linux
+============================================================
+
+SECTION 1 - OSPF VERIFICATION
+-----------------------------
+
+R1# show ip ospf neighbor
+Neighbor ID     Pri   State           Address         Interface
+2.2.2.2           0   FULL/  -        10.0.12.2       Gi2/0
+3.3.3.3           0   FULL/  -        10.0.13.2       Gi1/0
+
+R5# show ip ospf neighbor
+Neighbor ID     Pri   State           Address         Interface
+3.3.3.3           0   FULL/  -        10.0.35.1       Gi0/0
+
+R5# ping 1.1.1.1 source 5.5.5.5
+!!!!!  Success rate is 100 percent (5/5)
+
+SECTION 2 - eBGP WITH UPSTREAMS
+-------------------------------
+
+R1# show bgp ipv4 unicast summary
+Neighbor     V    AS      State/PfxRcd
+10.0.1.1     4    65200   1
+
+ISP1# show bgp ipv4 unicast
+  Network        Next Hop       Path
+*> 1.1.1.1/32    10.0.1.2       65100 i
+*> 9.9.9.9/32    0.0.0.0        32768 i
+
+R2# show bgp ipv4 unicast summary
+Neighbor     V    AS      State/PfxRcd
+10.0.2.1     4    65300   1
+
+SECTION 3 - iBGP FULL MESH (R1-R6)
+----------------------------------
+
+R1# show bgp ipv4 unicast summary
+Neighbor     V    AS      State/PfxRcd
+10.0.1.1     4    65200   1
+2.2.2.2      4    65100   2
+3.3.3.3      4    65100   2
+4.4.4.4      4    65100   2
+5.5.5.5      4    65100   2
+6.6.6.6      4    65100   2
+
+R5# show bgp ipv4 unicast
+  Network          Next Hop       Path
+*> 1.1.1.1/32     1.1.1.1        100 i
+*> 2.2.2.2/32     2.2.2.2        100 i
+*> 8.8.8.8/32     2.2.2.2        100 65300 i
+*> 9.9.9.9/32     1.1.1.1        100 65200 i
+*> 192.168.10.0/24 10.0.15.2     65400 i
+
+SECTION 4 - eBGP WITH CUSTOMERS
+-------------------------------
+
+CE1# show bgp ipv4 unicast
+  Network          Next Hop       Path
+*> 0.0.0.0/0      10.0.15.1      65100 i
+*> 8.8.8.8/32     10.0.15.1      65100 65300 i
+*> 9.9.9.9/32     10.0.15.1      65100 65200 i
+*> 192.168.10.0/24 0.0.0.0       32768 i
+
+SECTION 5 - END-TO-END REACHABILITY
+-----------------------------------
+
+CE1# ping 8.8.8.8 source 192.168.10.1
+!!!!!  Success rate is 100 percent (5/5)
+
+CE1# ping 9.9.9.9 source 192.168.10.1
+!!!!!  Success rate is 100 percent (5/5)
+
+CE1# ping 192.168.20.1 source 192.168.10.1
+!!!!!  Success rate is 100 percent (5/5)
+
+ISP2# ping 192.168.10.2 source 8.8.8.8
+!!!!!  Success rate is 100 percent (5/5)
+
+SECTION 6 - SUMMARY
+-------------------
+
+| Test                             | Result |
+|----------------------------------|--------|
+| OSPF adjacencies (all FULL)      | PASS   |
+| R1 - ISP1 eBGP session           | PASS   |
+| R2 - ISP2 eBGP session           | PASS   |
+| iBGP Full Mesh (15 sessions)     | PASS   |
+| R5 - CE1 eBGP session            | PASS   |
+| R6 - CE2 eBGP session            | PASS   |
+| CE1 to 8.8.8.8 ping              | PASS   |
+| CE1 to 9.9.9.9 ping              | PASS   |
+| CE1 to CE2 LAN ping              | PASS   |
+| ISP2 to CE1 LAN ping (reverse)   | PASS   |
+
+Phase 0 - Infrastructure
+Status: COMPLETE
+============================================================

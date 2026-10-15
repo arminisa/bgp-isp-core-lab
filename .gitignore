@@ -1,0 +1,15 @@
+*.gns3project
+*.gns3p/
+snapshots/
+*.qcow2
+*.bin
+*.image
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+.idea/
+*.log
+*.tmp
+tmp/
